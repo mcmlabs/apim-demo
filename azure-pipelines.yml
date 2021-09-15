@@ -1,0 +1,22 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- master
+
+pool: Default
+
+steps:
+- task: AzureResourceManagerTemplateDeployment@3
+  inputs:
+    deploymentScope: 'Resource Group'
+    azureResourceManagerConnection: 'APIMDemoServiceConnection'
+    subscriptionId: 'd2556530-6d03-4f64-9519-f3dc205a8863'
+    action: 'Create Or Update Resource Group'
+    resourceGroupName: 'APIMDemo'
+    location: 'West Europe'
+    templateLocation: 'Linked artifact'
+    csmFile: 'master.json'
+    deploymentMode: 'Validation'

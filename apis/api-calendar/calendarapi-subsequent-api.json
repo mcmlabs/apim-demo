@@ -1,0 +1,58 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "apiManagementServiceName": {
+      "type": "string"
+    },
+    "appInsightsName": {
+      "type": "string"
+    }
+  },
+  "resources": [
+    {
+      "properties": {
+        "description": "Calendar APIs",
+        "serviceUrl" : "https://conferenceapi.azurewebsites.net",
+        "type": "http",
+        "apiRevision": "1",
+        "apiVersion": "v1",
+        "isCurrent": true,
+        "apiVersionDescription": "v1 Calendar APIs",
+        "apiVersionSetId": "[resourceId('Microsoft.ApiManagement/service/apiVersionSets', parameters('apiManagementServiceName'), 'calendarAPIVersionSet')]",
+        "subscriptionRequired": true,
+        "displayName": "calendarapi",
+        "path": "conf",
+        "protocols": [
+          "https"
+        ],
+        "apiType": "http"
+      },
+      "name": "[concat(parameters('apiManagementServiceName'), '/calendarapi')]",
+      "type": "Microsoft.ApiManagement/service/apis",
+      "apiVersion": "2019-01-01",
+      "dependsOn": []
+    },
+    {
+      "properties": {
+        "value": "<policies>\n  <inbound>\n    <rate-limit-by-key calls=\"3\" renewal-period=\"15\" counter-key=\"@(context.Subscription.Id)\" />\n    <base />\n  </inbound>\n  <backend>\n    <base />\n  </backend>\n  <outbound>\n    <base />\n  </outbound>\n  <on-error>\n    <base />\n  </on-error>\n</policies>",
+        "format": "rawxml"
+      },
+      "name": "[concat(parameters('apiManagementServiceName'), '/calendarapi/policy')]",
+      "type": "Microsoft.ApiManagement/service/apis/policies",
+      "apiVersion": "2019-01-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apiManagementServiceName'), 'calendarapi')]"
+      ]
+    },
+    {
+      "properties": {},
+      "name": "[concat(parameters('apiManagementServiceName'), '/Calendar/calendarapi')]",
+      "type": "Microsoft.ApiManagement/service/products/apis",
+      "apiVersion": "2019-01-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apiManagementServiceName'), 'calendarapi')]"
+      ]
+    }
+  ]
+}

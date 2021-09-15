@@ -1,0 +1,22 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "apiManagementServiceName": {
+      "type": "string"
+    }
+  },
+  "resources": [
+    {
+      "properties": {
+        "displayName": "Calendar API (Swagger)",
+        "description": "Calendar API created using the creator tool from here https://github.com/Azure/azure-api-management-devops-resource-kit/blob/master/src/APIM_ARMTemplate/README.md#Creator",
+        "versioningScheme": "Segment"
+      },
+      "name": "[concat(parameters('apiManagementServiceName'), '/calendarAPIVersionSet')]",
+      "type": "Microsoft.ApiManagement/service/apiVersionSets",
+      "apiVersion": "2019-01-01",
+      "dependsOn": []
+    }
+  ]
+}

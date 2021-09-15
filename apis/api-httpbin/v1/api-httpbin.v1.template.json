@@ -1,0 +1,108 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "apiManagementServiceName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the API Management service."
+      }
+    },
+    "storageURI": {
+      "type": "string",
+      "metadata": {
+        "description": "Storage location of the tempaltes."
+      }
+    },
+    "storageSAS": {
+      "type": "string",
+      "metadata": {
+        "description": "SAS token to access the template files."
+      }
+    }
+  },
+  "variables": {},
+  "resources": [
+    {
+      "type": "Microsoft.ApiManagement/service/apis",
+      "name": "[concat(parameters('apiManagementServiceName'), '/httpBinAPI')]",
+      "apiVersion": "2019-01-01",
+      "properties": {
+        "displayName": "HTTP Bin API",
+        "apiRevision": "1",
+        "description": "API Management facade for a very handy and free online HTTP tool",
+        "serviceUrl": "https://httpbin.org",
+        "path": "httpbin",
+        "protocols": [
+          "https"
+        ],
+        "apiVersion": "v1",
+        "apiVersionSetId": "[resourceId('Microsoft.ApiManagement/service/apiVersionSets', parameters('apiManagementServiceName'), 'versionset-httpbin-api')]"
+      }
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "name": "[concat(parameters('apiManagementServiceName'), '/httpBinAPI/get')]",
+      "apiVersion": "2019-01-01",
+      "properties": {
+        "displayName": "Returns GET data.",
+        "method": "GET",
+        "urlTemplate": "/get",
+        "templateParameters": [],
+        "description": "Returns GET data.\n",
+        "responses": [
+          {
+            "statusCode": 200,
+            "description": "OK",
+            "headers": []
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apiManagementServiceName'), 'httpBinAPI')]"
+      ]
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "name": "[concat(parameters('apiManagementServiceName'), '/httpBinAPI/post')]",
+      "apiVersion": "2019-01-01",
+      "properties": {
+        "displayName": "Returns POST data.",
+        "method": "POST",
+        "urlTemplate": "/post",
+        "templateParameters": [],
+        "description": "Returns POST data.\n",
+        "responses": [
+          {
+            "statusCode": 200,
+            "description": "OK",
+            "headers": []
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apiManagementServiceName'), 'httpBinAPI')]"
+      ]
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/products/apis",
+      "name": "[concat(parameters('apiManagementServiceName'), '/httpbin/httpBinAPI')]",
+      "apiVersion": "2019-01-01",
+      "properties": {},
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apiManagementServiceName'), 'httpBinAPI')]"
+      ]
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/apis/policies",
+      "name": "[concat(parameters('apiManagementServiceName'), '/httpBinAPI/policy')]",
+      "apiVersion": "2019-01-01",
+      "properties": {
+        "policyContent": "[concat(uri(parameters('storageURI'), 'apis/api-httpbin/v1/api-httpbin.v1.policy.xml'), parameters('storageSAS'))]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apiManagementServiceName'), 'httpBinAPI')]"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,121 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "apiManagementServiceName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the API Management"
+      }
+    },
+    "storageURI": {
+      "type": "string",
+      "metadata": {
+        "description": "Base URL of the repository"
+      }
+    },
+    "storageSAS": {
+      "type": "string",
+      "metadata": {
+        "description": "Query string for the URL of the repository"
+      }
+    }
+  },
+  "resources": [
+    {
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('storageURI'), 'apis/api-calendar/calendarapi-globalServicePolicy.json', parameters('storageSAS'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "apiManagementServiceName": {
+            "value": "[parameters('apiManagementServiceName')]"
+          }
+        }
+      },
+      "name": "globalServicePolicyTemplate",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2017-05-10",
+      "dependsOn": []
+    },
+    {
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('storageURI'), 'apis/api-calendar/calendarapi-apiVersionSets.json', parameters('storageSAS'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "apiManagementServiceName": {
+            "value": "[parameters('apiManagementServiceName')]"
+          }
+        }
+      },
+      "name": "versionSetTemplate",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2017-05-10",
+      "dependsOn": []
+    },
+    {
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('storageURI'), 'apis/api-calendar/calendarapi-products.json', parameters('storageSAS'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "apiManagementServiceName": {
+            "value": "[parameters('apiManagementServiceName')]"
+          }
+        }
+      },
+      "name": "productsTemplate",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2017-05-10",
+      "dependsOn": []
+    },
+    {
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('storageURI'), 'apis/api-calendar/calendarapi-initial.api.json', parameters('storageSAS'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "apiManagementServiceName": {
+            "value": "[parameters('apiManagementServiceName')]"
+          }
+        }
+      },
+      "name": "calendarapi-InitialAPITemplate",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2017-05-10",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'globalServicePolicyTemplate')]",
+        "[resourceId('Microsoft.Resources/deployments', 'versionSetTemplate')]",
+        "[resourceId('Microsoft.Resources/deployments', 'productsTemplate')]"
+      ]
+    },
+    {
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('storageURI'), 'apis/api-calendar/calendarapi-subsequent-api.json', parameters('storageSAS'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parametersLink": {
+          "uri": "[concat(uri(parameters('storageURI'), 'apis/api-calendar/calendarapi-subsequent-api.parameters.json'), parameters('storageSAS'))]",
+          "contentVersion":"1.0.0.0"
+        }
+      },
+      "name": "calendarapis-SubsequentAPITemplate",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2017-05-10",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'calendarapi-InitialAPITemplate')]"
+      ]
+    }
+  ]
+}

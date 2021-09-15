@@ -1,0 +1,77 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "apiManagementServiceName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the API Management service."
+      }
+    },
+    "storageURI": {
+      "type": "string",
+      "metadata": {
+        "description": "Storage location of the tempaltes."
+      }
+    },
+    "storageSAS": {
+      "type": "string",
+      "metadata": {
+        "description": "SAS token to access the template files."
+      }
+    }
+  },
+  "resources": [
+    {
+      "apiVersion": "2019-01-01",
+      "type": "Microsoft.ApiManagement/service/products",
+      "name": "[concat(parameters('apiManagementServiceName'), '/httpbin')]",
+      "properties": {
+        "displayName": "httpbin",
+        "description": "A simple httpbin App APIs.",
+        "subscriptionRequired": true,
+        "approvalRequired": false,
+        "subscriptionsLimit": 1,
+        "state": "published"
+      }
+    },
+    {
+        "type": "Microsoft.ApiManagement/service/products/policies",
+        "name": "[concat(parameters('apiManagementServiceName'), '/httpbin/policy')]",
+        "apiVersion": "2018-01-01",
+        "properties": {
+            "policyContent": "[concat(uri(parameters('storageURI'), 'shared/product-httpbin.policy.xml'), parameters('storageSAS'))]",
+            "contentFormat": "rawxml-link"
+        },
+        "dependsOn": [
+            "[resourceId('Microsoft.ApiManagement/service/products', parameters('apiManagementServiceName'), 'httpbin')]"
+        ]
+    },
+    {
+        "type": "Microsoft.ApiManagement/service/tags",
+        "apiVersion": "2019-01-01",
+        "name": "[concat(parameters('apiManagementServiceName'), '/read')]",
+        "properties": {
+            "displayName": "App APIs that read data."
+        }
+    },
+    {
+        "type": "Microsoft.ApiManagement/service/tags",
+        "apiVersion": "2019-01-01",
+        "name": "[concat(parameters('apiManagementServiceName'), '/write')]",
+        "properties": {
+            "displayName": "All APIs that create, update or delete data."
+        }
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/groups",
+      "apiVersion": "2019-01-01",
+      "name": "[concat(parameters('apiManagementServiceName'), '/httpbin')]",
+      "properties": {
+          "displayName": "httpbin",
+          "description": "Group for httpbin APIs users.",
+          "type": "custom"
+      }
+    }
+  ]
+}

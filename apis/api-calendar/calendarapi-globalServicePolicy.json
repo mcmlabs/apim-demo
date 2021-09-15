@@ -1,0 +1,21 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "apiManagementServiceName": {
+      "type": "string"
+    }
+  },
+  "resources": [
+    {
+      "properties": {
+        "value": "<policies>\n  <inbound />\n  <backend>\n    <forward-request />\n  </backend>\n  <outbound />\n  <on-error />\n</policies>",
+        "format": "rawxml"
+      },
+      "name": "[concat(parameters('apiManagementServiceName'), '/policy')]",
+      "type": "Microsoft.ApiManagement/service/policies",
+      "apiVersion": "2019-01-01",
+      "dependsOn": []
+    }
+  ]
+}

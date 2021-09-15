@@ -1,0 +1,192 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "apiManagementServiceName": {
+        "type": "string",
+        "metadata": {
+          "description": "Storage location of the tempaltes."
+        }
+      },
+      "storageURI": {
+        "type": "string",
+        "metadata": {
+          "description": "Storage location of the tempaltes."
+        }
+      },
+      "storageSAS": {
+        "type": "string",
+        "metadata": {
+          "description": "SAS token to access the template files."
+        }
+      }
+    },
+    "variables": {
+    },
+    "resources": [
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2017-05-10",
+      "name": "vNetDeployment",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(uri(parameters('storageURI'), 'core/vNet.json'), parameters('storageSAS'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parametersLink": {
+          "uri": "[concat(uri(parameters('storageURI'), 'core/vNet.parameters.json'), parameters('storageSAS'))]",
+          "contentVersion":"1.0.0.0"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2017-05-10",
+      "name": "serviceDeployment",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(uri(parameters('storageURI'), 'core/service.json'), parameters('storageSAS'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parametersLink": {
+          "uri": "[concat(uri(parameters('storageURI'), 'core/service.parameters.json'), parameters('storageSAS'))]",
+          "contentVersion":"1.0.0.0"
+        }
+      },
+      "dependsOn" : ["vNetDeployment"]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2017-05-10",
+      "name": "appInsightsDeployment",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(uri(parameters('storageURI'), 'core/applicationinsights.json'), parameters('storageSAS'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parametersLink": {
+          "uri": "[concat(uri(parameters('storageURI'), 'core/applicationinsights.parameters.json'), parameters('storageSAS'))]",
+          "contentVersion":"1.0.0.0"
+        }
+      },
+      "dependsOn" : ["serviceDeployment"]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2017-05-10",
+      "name": "productshttpbindeployment",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(uri(parameters('storageURI'), 'shared/products-httpbin.json'), parameters('storageSAS'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+        "apiManagementServiceName": {
+          "value": "[parameters('apiManagementServiceName')]"
+        },
+        "storageURI": {
+          "value": "[parameters('storageURI')]"
+        },
+        "storageSAS": {
+          "value": "[parameters('storageSAS')]"
+        }
+       }
+      },
+      "dependsOn" : ["serviceDeployment"]
+    },
+    {
+      "apiVersion": "2017-05-10",
+      "name": "httpBinVersionSetTemplate",
+      "type": "Microsoft.Resources/deployments",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(uri(parameters('storageURI'), 'apis/api-httpbin/api-httpbin.version-set.template.json'), parameters('storageSAS'))]",
+            "contentVersion":"1.0.0.0"
+        },
+        "parameters": {
+        "apiManagementServiceName": {
+          "value": "[parameters('apiManagementServiceName')]"
+        }
+       }
+      },
+      "dependsOn" : ["serviceDeployment"]
+    },
+    {
+      "apiVersion": "2017-05-10",
+      "name": "httpBinV1Template",
+      "type": "Microsoft.Resources/deployments",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(uri(parameters('storageURI'), 'apis/api-httpbin/v1/api-httpbin.v1.template.json'), parameters('storageSAS'))]",
+            "contentVersion":"1.0.0.0"
+        },
+        "parameters": {
+        "apiManagementServiceName": {
+          "value": "[parameters('apiManagementServiceName')]"
+        },
+        "storageURI": {
+          "value": "[parameters('storageURI')]"
+        },
+        "storageSAS": {
+          "value": "[parameters('storageSAS')]"
+        }
+       }
+      },
+      "dependsOn" : ["httpBinVersionSetTemplate"]
+    },
+    {
+      "apiVersion": "2017-05-10",
+      "name": "httpBinV2Template",
+      "type": "Microsoft.Resources/deployments",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(uri(parameters('storageURI'), 'apis/api-httpbin/v2/api-httpbin.v2.template.json'), parameters('storageSAS'))]",
+            "contentVersion":"1.0.0.0"
+        },
+        "parameters": {
+        "apiManagementServiceName": {
+          "value": "[parameters('apiManagementServiceName')]"
+        },
+        "storageURI": {
+          "value": "[parameters('storageURI')]"
+        },
+        "storageSAS": {
+          "value": "[parameters('storageSAS')]"
+        }
+       }
+      },
+      "dependsOn" : ["httpBinVersionSetTemplate", "httpBinV1Template"]
+    },
+    {
+      "apiVersion": "2017-05-10",
+      "name": "calendarapiDeployment",
+      "type": "Microsoft.Resources/deployments",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(uri(parameters('storageURI'), 'apis/api-calendar/calendarapi-master.json'), parameters('storageSAS'))]",
+            "contentVersion":"1.0.0.0"
+        },
+        "parameters": {
+        "apiManagementServiceName": {
+          "value": "[parameters('apiManagementServiceName')]"
+        },
+        "storageURI": {
+          "value": "[parameters('storageURI')]"
+        },
+        "storageSAS": {
+          "value": "[parameters('storageSAS')]"
+        }
+       }
+      },
+      "dependsOn" : ["serviceDeployment"]
+    }
+  ] 
+}

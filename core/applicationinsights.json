@@ -1,0 +1,79 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "apiManagementServiceName": {
+            "type": "string"
+        },
+        "location": {
+            "type": "string"
+        },
+        "appInsightsName": {
+            "type": "string"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "name": "[parameters('appInsightsName')]",
+            "type": "Microsoft.Insights/components",
+            "apiVersion": "2015-05-01",
+            "location": "[parameters('location')]",
+            "tags": {},
+            "kind": "other",
+            "properties": {
+              "Application_Type": "other"
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/loggers",
+            "name": "[concat(parameters('apiManagementServiceName'), '/', parameters('appInsightsName'))]",
+            "apiVersion": "2018-06-01-preview",
+            "properties": {
+              "loggerType": "applicationInsights",
+              "description": "Logger resources to APIM",
+              "credentials": {
+                  "instrumentationKey": "[reference(resourceId('Microsoft.Insights/components', parameters('appInsightsName')), '2015-05-01').InstrumentationKey]"
+              }
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/diagnostics",
+            "name": "[concat(parameters('apiManagementServiceName'), '/applicationinsights')]",
+            "apiVersion": "2018-06-01-preview",
+            "properties": {
+                "alwaysLog": "allErrors",
+                "loggerId": "[concat('/loggers/', parameters('appInsightsName'))]",
+                "sampling": {
+                "samplingType" : "fixed",
+                "percentage": 10
+                },
+                "frontend": {
+                    "request": {
+                      "headers": [],
+                      "body": {}
+                    },
+                    "response": {
+                      "headers": [],
+                      "body": {}
+                    }
+                  },
+                  "backend": {
+                    "request": {
+                      "headers": [],
+                      "body": {}
+                    },
+                    "response": {
+                      "headers": [],
+                      "body": {}
+                    }
+                  },
+                "enableHttpCorrelationHeaders": false
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/loggers', parameters('apiManagementServiceName'), parameters('appInsightsName'))]"
+            ]
+        }
+
+    ]
+}
