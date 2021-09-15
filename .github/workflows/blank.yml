@@ -1,0 +1,39 @@
+name: APIM-DEMO-ENVIRONEMENT-CI
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the main branch
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+env:
+  PROJECT_PATH_TODO_INFRA_JSON: './master.json'
+  RESOURCE_GROUP: apim-demo
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+
+      - name: Azure Login
+        uses: Azure/login@v1.1
+        
+      - name: Deploy Azure Resource Manager (ARM) Template
+        uses: Azure/arm-deploy@1.0.4
+        with:
+          scope: resourcegroup
+          resourceGroupName: ${{ env.RESOURCE_GROUP }}
+          template: ${{ env.PROJECT_PATH_TODO_INFRA_JSON }}
+          deploymentName: apim-demo-mcmlabs-github-action-${{ github.run_number }}-${{ github.run_id }}
