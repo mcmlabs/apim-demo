@@ -12,8 +12,12 @@ on:
   workflow_dispatch:
 
 env:
-  PROJECT_PATH_TODO_INFRA_JSON: './master.json'
+  PROJECT_PATH_TODO_MASTER_JSON: './master.json'
+  PROJECT_PATH_TODO_STORAGE_JSON: './storage.json'
   RESOURCE_GROUP: apim-demo
+  STORAGE_ACCOUNT_NAME: mcmapimdemotemplatestore
+  STORAGE_ACCOUNT_TYPE: Standard_LRS
+  LOCATION: West Europe
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -31,11 +35,26 @@ jobs:
         uses: Azure/login@v1.1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-        
+
+      - name: Deploy Azure Resource Manager (ARM) Template
+        uses: Azure/arm-deploy@1.0.4
+        id: deploy_store
+        with:
+          scope: resourcegroup
+          resourceGroupName: ${{ env.RESOURCE_GROUP }}
+          template: ${{ env.PROJECT_PATH_TODO_STORAGE_JSON }}
+          deploymentName: apim-demo-mcmlabs-storage-github-action-${{ github.run_number }}-${{ github.run_id }}
+          parameters: storageAccountName="${{env.STORAGE_ACCOUNT_NAME}}" storageAccountType="${{env.STORAGE_ACCOUNT_TYPE}}" location="${{env.LOCATION}}"
+      
+      - uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            echo ${{steps.deploy_store.output}}
+      
       - name: Deploy Azure Resource Manager (ARM) Template
         uses: Azure/arm-deploy@1.0.4
         with:
           scope: resourcegroup
           resourceGroupName: ${{ env.RESOURCE_GROUP }}
-          template: ${{ env.PROJECT_PATH_TODO_INFRA_JSON }}
-          deploymentName: apim-demo-mcmlabs-github-action-${{ github.run_number }}-${{ github.run_id }}
+          template: ${{ env.PROJECT_PATH_TODO_MASTER_JSON }}
+          deploymentName: apim-demo-mcmlabs-master-github-action-${{ github.run_number }}-${{ github.run_id }}
